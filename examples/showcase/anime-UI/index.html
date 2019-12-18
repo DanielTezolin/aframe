@@ -10,26 +10,26 @@
   <body>
     <a-scene renderer="colorManagement: true;">
       <a-assets>
-        <a-asset-item id="engine" src="models/engine.glb" response-type="arraybuffer"></a-asset-item>
-        <a-mixin id="image" geometry="height: 2; width: 2"></a-mixin>
-        <a-mixin id="delayVisible" event-set__loaded="visible: true" visible="false"></a-mixin>
-        <audio id="blip1" src="audio/321103__nsstudios__blip1.wav"></audio>
-        <audio id="blip2" src="audio/321104__nsstudios__blip2.wav"></audio>
-        <img id="glow1" src="img/glow1.png">
-        <img id="ring1" src="img/ring1.png">
-        <img id="ring2" src="img/ring2.png">
-        <img id="ring3" src="img/ring3.png">
-        <img id="ring4" src="img/ring4.png">
-        <img id="ring5" src="img/ring5.png">
-        <img id="schematic1" src="img/schematic1.png">
-        <img id="schematic2" src="img/schematic2.png">
-        <img id="schematic3" src="img/schematic3.png">
-        <img id="schematic4" src="img/schematic4.png">
-        <img id="schematic5" src="img/schematic5.png">
-        <img id="text1" src="img/text1.png">
-        <img id="text2" src="img/text2.png">
-        <img id="text3" src="img/text3.png">
-        <img id="text4" src="img/text4.png">
+        <a-asset-item id="engine" scene='abertura' src="models/engine.glb" response-type="arraybuffer"></a-asset-item>
+        <a-mixin id="image" scene='abertura' geometry="height: 2; width: 2"></a-mixin>
+        <a-mixin id="delayVisible" scene='abertura' event-set__loaded="visible: true" visible="false"></a-mixin>
+        <audio id="blip1" scene='abertura' src="audio/321103__nsstudios__blip1.wav"></audio>
+        <audio id="blip2" scene='abertura' src="audio/321104__nsstudios__blip2.wav"></audio>
+        <img id="glow1" scene='abertura' scene='abertura' src="img/glow1.png">
+        <img id="ring1" scene='abertura' src="img/ring1.png">
+        <img id="ring2" scene='abertura' src="img/ring2.png">
+        <img id="ring3" scene='abertura' src="img/ring3.png">
+        <img id="ring4" scene='abertura' src="img/ring4.png">
+        <img id="ring5" scene='abertura' src="img/ring5.png">
+        <img id="schematic1" scene='abertura' src="img/schematic1.png">
+        <img id="schematic2" scene='ambientacao' src="img/schematic2.png">
+        <img id="schematic3" scene='ambientacao' src="img/schematic3.png">
+        <img id="schematic4" scene='ambientacao' src="img/schematic4.png">
+        <img id="schematic5" scene='ambientacao' src="img/schematic5.png">
+        <img id="text1" scene='ambientacao' src="img/text1.png">
+        <img id="text2" scene='ambientacao' src="img/text2.png">
+        <img id="text3" scene='ambientacao' src="img/text3.png">
+        <img id="text4" scene='ambientacao' src="img/text4.png">
       </a-assets>
 
       <a-entity position="1.75 0 1.2" rotation="0 28 0">
