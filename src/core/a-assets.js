@@ -86,10 +86,8 @@ module.exports = registerElement('a-assets', {
 
                 // Trigger loaded for scene to start rendering.
                 var loopLoaded = Object.keys(loaded)
-                console.log(this.loders)
                 for (i = 0; i < loopLoaded.length; i++) {
-                    console.log(loopLoaded)
-                    Promise.all(loaded[loopLoaded[i]]).then(emitter(self, loopLoaded[i]));
+                    Promise.all(loaded[loopLoaded[i]]).then(e => emitter(self, e));
                 }
 
 
@@ -144,9 +142,9 @@ module.exports = registerElement('a-assets', {
     })
 });
 
-function emitter(self, sceneAsLoad) {
-    self.loders.push(sceneAsLoad)
-    self.emit('sceneLoaded', sceneAsLoad)
+function emitter(self, event) {
+    self.loders.push(event[0].path[0].attributes.scene.value)
+    self.emit('sceneLoaded', { scene: event[0].path[0].attributes.scene.value, assets: event })
 }
 
 /**
