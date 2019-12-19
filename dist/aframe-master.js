@@ -28955,7 +28955,14 @@ module.exports = anime;
 				session.addEventListener( 'end', onSessionEnd );
 
 				// eslint-disable-next-line no-undef
-				session.updateRenderState( { baseLayer: new XRWebGLLayer( session, gl ) } );
+				session.updateRenderState( { baseLayer: new XRWebGLLayer( session, gl,
+					{
+						antialias: gl.getContextAttributes().antialias,
+						alpha: gl.getContextAttributes().alpha,
+						depth: gl.getContextAttributes().depth,
+						stencil: gl.getContextAttributes().stencil
+					}
+				) } );
 
 				session.requestReferenceSpace( referenceSpaceType ).then( onRequestReferenceSpace );
 
@@ -29434,10 +29441,7 @@ module.exports = anime;
 
 		// xr
 
-		var isOculusBrowser = /(OculusBrowser)/i.test(window.navigator.userAgent);
-
-		// Disable WebXR for Oculus Browser.
-		var xr = ( !isOculusBrowser && typeof navigator !== 'undefined' && 'xr' in navigator ) ? new WebXRManager( _this, _gl ) : new WebVRManager( _this );
+		var xr = ( typeof navigator !== 'undefined' && 'xr' in navigator ) ? new WebXRManager( _this, _gl ) : new WebVRManager( _this );
 
 		this.xr = xr;
 
@@ -65705,139 +65709,138 @@ function extend() {
 
 },{}],51:[function(_dereq_,module,exports){
 module.exports={
-  "name": "aframe",
-  "version": "1.0.0",
-  "description": "A web framework for building virtual reality experiences.",
-  "homepage": "https://aframe.io/",
-  "main": "dist/aframe-master.js",
-  "scripts": {
-    "browserify": "browserify src/index.js -s 'AFRAME' -p browserify-derequire",
-    "build": "shx mkdir -p build/ && npm run browserify -- --debug -t [envify --INSPECTOR_VERSION dev] -o build/aframe.js",
-    "codecov": "codecov",
-    "dev": "npm run build && cross-env INSPECTOR_VERSION=dev node ./scripts/budo -t envify",
-    "dist": "node scripts/updateVersionLog.js && npm run dist:min && npm run dist:max",
-    "dist:max": "npm run browserify -s -- --debug | exorcist dist/aframe-master.js.map > dist/aframe-master.js",
-    "dist:min": "npm run browserify -s -- --debug -p [minifyify --map aframe-master.min.js.map --output dist/aframe-master.min.js.map] -o dist/aframe-master.min.js",
-    "docs": "markserv --dir docs --port 9001",
-    "preghpages": "node ./scripts/preghpages.js",
-    "ghpages": "ghpages -p gh-pages/",
-    "lint": "semistandard -v | snazzy",
-    "lint:fix": "semistandard --fix",
-    "precommit": "npm run lint",
-    "prepush": "node scripts/testOnlyCheck.js",
-    "prerelease": "node scripts/release.js 0.9.2 1.0.0",
-    "start": "npm run dev",
-    "start:https": "cross-env SSL=true npm run dev",
-    "test": "karma start ./tests/karma.conf.js",
-    "test:docs": "node scripts/docsLint.js",
-    "test:firefox": "npm test -- --browsers Firefox",
-    "test:chrome": "npm test -- --browsers Chrome",
-    "test:nobrowser": "NO_BROWSER=true npm test",
-    "test:node": "mocha --ui tdd tests/node"
-  },
-  "repository": "aframevr/aframe",
-  "license": "MIT",
-  "files": [
-    "dist/*",
-    "docs/**/*",
-    "src/**/*",
-    "vendor/**/*"
-  ],
-  "dependencies": {
-    "custom-event-polyfill": "^1.0.6",
-    "debug": "ngokevin/debug#noTimestamp",
-    "deep-assign": "^2.0.0",
-    "document-register-element": "dmarcos/document-register-element#8ccc532b7f3744be954574caf3072a5fd260ca90",
-    "load-bmfont": "^1.2.3",
-    "object-assign": "^4.0.1",
-    "present": "0.0.6",
-    "promise-polyfill": "^3.1.0",
-    "super-animejs": "^3.1.0",
-    "super-three": "^0.111.4",
-    "three-bmfont-text": "dmarcos/three-bmfont-text#1babdf8507",
-    "webvr-polyfill": "^0.10.10"
-  },
-  "devDependencies": {
-    "browserify": "^13.1.0",
-    "browserify-css": "^0.8.4",
-    "browserify-derequire": "^0.9.4",
-    "browserify-istanbul": "^2.0.0",
-    "budo": "^9.2.0",
-    "chai": "^3.5.0",
-    "chai-shallow-deep-equal": "^1.4.0",
-    "chalk": "^1.1.3",
-    "codecov": "^1.0.1",
-    "cross-env": "^5.0.1",
-    "envify": "^3.4.1",
-    "exorcist": "^0.4.0",
-    "ghpages": "0.0.8",
-    "git-rev": "^0.2.1",
-    "glob": "^7.1.1",
-    "husky": "^0.11.7",
-    "istanbul": "^0.4.5",
-    "jsdom": "^9.11.0",
-    "karma": "1.4.1",
-    "karma-browserify": "^5.1.0",
-    "karma-chai-shallow-deep-equal": "0.0.4",
-    "karma-chrome-launcher": "^2.0.0",
-    "karma-coverage": "^1.1.1",
-    "karma-env-preprocessor": "^0.1.1",
-    "karma-firefox-launcher": "^1.2.0",
-    "karma-mocha": "^1.1.1",
-    "karma-mocha-reporter": "^2.1.0",
-    "karma-sinon-chai": "1.2.4",
-    "lolex": "^1.5.1",
-    "markserv": "github:sukima/markserv#feature/fix-broken-websoketio-link",
-    "minifyify": "^7.3.3",
-    "mocha": "^3.0.2",
-    "mozilla-download": "^1.1.1",
-    "replace-in-file": "^2.5.3",
-    "semistandard": "^9.0.0",
-    "shelljs": "^0.7.7",
-    "shx": "^0.2.2",
-    "sinon": "^1.17.5",
-    "sinon-chai": "2.8.0",
-    "snazzy": "^5.0.0",
-    "too-wordy": "ngokevin/too-wordy",
-    "uglifyjs": "^2.4.10",
-    "write-good": "^0.9.1"
-  },
-  "link": true,
-  "browserify": {
-    "transform": [
-      "browserify-css",
-      "envify"
-    ]
-  },
-  "semistandard": {
-    "ignore": [
-      "build/**",
-      "dist/**",
-      "examples/**/shaders/*.js",
-      "**/vendor/**"
-    ]
-  },
-  "keywords": [
-    "3d",
-    "aframe",
-    "cardboard",
-    "components",
-    "oculus",
-    "three",
-    "three.js",
-    "rift",
-    "vive",
-    "vr",
-    "web-components",
-    "webvr"
-  ],
-  "browserify-css": {
-    "minify": true
-  },
-  "engines": {
-    "node": ">= 4.6.0",
-    "npm": "^2.15.9"
-  }
+    "name": "aframe",
+    "version": "1.0.0",
+    "description": "A web framework for building virtual reality experiences.",
+    "homepage": "https://aframe.io/",
+    "main": "dist/aframe-master.js",
+    "scripts": {
+        "browserify": "browserify src/index.js -s 'AFRAME' -p browserify-derequire",
+        "build": "shx mkdir -p build/ && npm run browserify -- --debug -t [envify --INSPECTOR_VERSION dev] -o build/aframe.js",
+        "codecov": "codecov",
+        "dev": "npm run build && cross-env INSPECTOR_VERSION=dev node ./scripts/budo -t envify",
+        "dist": "node scripts/updateVersionLog.js && npm run dist:min && npm run dist:max",
+        "dist:max": "npm run browserify -s -- --debug | exorcist dist/aframe-master.js.map > dist/aframe-master.js",
+        "dist:min": "npm run browserify -s -- --debug -p [minifyify --map aframe-master.min.js.map --output dist/aframe-master.min.js.map] -o dist/aframe-master.min.js",
+        "docs": "markserv --dir docs --port 9001",
+        "preghpages": "node ./scripts/preghpages.js",
+        "ghpages": "ghpages -p gh-pages/",
+        "lint": "semistandard -v | snazzy",
+        "lint:fix": "semistandard --fix",
+        "precommit": "npm run lint",
+        "prepush": "node scripts/testOnlyCheck.js",
+        "prerelease": "node scripts/release.js 0.9.2 1.0.0",
+        "start": "npm run dev",
+        "start:https": "cross-env SSL=true npm run dev",
+        "test": "karma start ./tests/karma.conf.js",
+        "test:docs": "node scripts/docsLint.js",
+        "test:firefox": "npm test -- --browsers Firefox",
+        "test:chrome": "npm test -- --browsers Chrome",
+        "test:nobrowser": "NO_BROWSER=true npm test",
+        "test:node": "mocha --ui tdd tests/node"
+    },
+    "license": "MIT",
+    "files": [
+        "dist/*",
+        "docs/**/*",
+        "src/**/*",
+        "vendor/**/*"
+    ],
+    "dependencies": {
+        "custom-event-polyfill": "^1.0.6",
+        "debug": "ngokevin/debug#noTimestamp",
+        "deep-assign": "^2.0.0",
+        "document-register-element": "dmarcos/document-register-element#8ccc532b7f3744be954574caf3072a5fd260ca90",
+        "load-bmfont": "^1.2.3",
+        "object-assign": "^4.0.1",
+        "present": "0.0.6",
+        "promise-polyfill": "^3.1.0",
+        "super-animejs": "^3.1.0",
+        "super-three": "^0.111.4",
+        "three-bmfont-text": "dmarcos/three-bmfont-text#1babdf8507",
+        "webvr-polyfill": "^0.10.10"
+    },
+    "devDependencies": {
+        "browserify": "^13.1.0",
+        "browserify-css": "^0.8.4",
+        "browserify-derequire": "^0.9.4",
+        "browserify-istanbul": "^2.0.0",
+        "budo": "^9.2.0",
+        "chai": "^3.5.0",
+        "chai-shallow-deep-equal": "^1.4.0",
+        "chalk": "^1.1.3",
+        "codecov": "^1.0.1",
+        "cross-env": "^5.0.1",
+        "envify": "^3.4.1",
+        "exorcist": "^0.4.0",
+        "ghpages": "0.0.8",
+        "git-rev": "^0.2.1",
+        "glob": "^7.1.1",
+        "husky": "^0.11.7",
+        "istanbul": "^0.4.5",
+        "jsdom": "^9.11.0",
+        "karma": "1.4.1",
+        "karma-browserify": "^5.1.0",
+        "karma-chai-shallow-deep-equal": "0.0.4",
+        "karma-chrome-launcher": "^2.0.0",
+        "karma-coverage": "^1.1.1",
+        "karma-env-preprocessor": "^0.1.1",
+        "karma-firefox-launcher": "^1.2.0",
+        "karma-mocha": "^1.1.1",
+        "karma-mocha-reporter": "^2.1.0",
+        "karma-sinon-chai": "1.2.4",
+        "lolex": "^1.5.1",
+        "markserv": "github:sukima/markserv#feature/fix-broken-websoketio-link",
+        "minifyify": "^7.3.3",
+        "mocha": "^3.0.2",
+        "mozilla-download": "^1.1.1",
+        "replace-in-file": "^2.5.3",
+        "semistandard": "^9.0.0",
+        "shelljs": "^0.7.7",
+        "shx": "^0.2.2",
+        "sinon": "^1.17.5",
+        "sinon-chai": "2.8.0",
+        "snazzy": "^5.0.0",
+        "too-wordy": "ngokevin/too-wordy",
+        "uglifyjs": "^2.4.10",
+        "write-good": "^0.9.1"
+    },
+    "link": true,
+    "browserify": {
+        "transform": [
+            "browserify-css",
+            "envify"
+        ]
+    },
+    "semistandard": {
+        "ignore": [
+            "build/**",
+            "dist/**",
+            "examples/**/shaders/*.js",
+            "**/vendor/**"
+        ]
+    },
+    "keywords": [
+        "3d",
+        "aframe",
+        "cardboard",
+        "components",
+        "oculus",
+        "three",
+        "three.js",
+        "rift",
+        "vive",
+        "vr",
+        "web-components",
+        "webvr"
+    ],
+    "browserify-css": {
+        "minify": true
+    },
+    "engines": {
+        "node": ">= 4.6.0",
+        "npm": "^2.15.9"
+    }
 }
 
 },{}],52:[function(_dereq_,module,exports){
@@ -74326,6 +74329,7 @@ module.exports = registerElement('a-assets', {
                 this.isAssets = true;
                 this.fileLoader = fileLoader;
                 this.timeout = null;
+                this.loders = []
             }
         },
 
@@ -74343,45 +74347,59 @@ module.exports = registerElement('a-assets', {
                 if (!this.parentNode.isScene) {
                     throw new Error('<a-assets> must be a child of a <a-scene>.');
                 }
-
                 // Wait for <img>s.
                 imgEls = this.querySelectorAll('img');
                 for (i = 0; i < imgEls.length; i++) {
                     imgEl = fixUpMediaElement(imgEls[i]);
-                    if (loaded[imgEls[i].attributes.scene.value] == undefined) loaded[imgEls[i].attributes.scene.value] = []
+                    if (imgEls[i].attributes.scene.value == undefined) {
+                        throw new Error("Todos os assets tem que pssuir a cena.");
+                    }
 
-                    loaded[imgEls[i].attributes.scene.value].push(new Promise(function (resolve, reject) {
-                        // Set in cache because we won't be needing to call three.js loader if we have.
-                        // a loaded media element.
-                        THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
-                        imgEl.onload = resolve;
-                        imgEl.onerror = reject;
-                    }));
-                    //   console.log(Object.entries(loaded))
+                    //Checa se esse asstes ja foi baixado e se nao faz o download
+                    if (!imgEls[i].isChecked) {
+                        //Caso nao exista cena ele vai crirar uma
+                        if (loaded[imgEls[i].attributes.scene.value] == undefined) loaded[imgEls[i].attributes.scene.value] = []
+
+                        imgEls[i].isChecked = true
+                        loaded[imgEls[i].attributes.scene.value].push(new Promise(function (resolve, reject) {
+                            // Set in cache because we won't be needing to call three.js loader if we have.
+                            // a loaded media element.
+                            THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
+                            imgEl.onload = resolve;
+                            imgEl.onerror = reject;
+                        }));
+                    }
                 }
 
                 // Wait for <audio>s and <video>s.
                 mediaEls = this.querySelectorAll('audio, video');
                 for (i = 0; i < mediaEls.length; i++) {
 
-                    if (loaded[mediaEls[i].attributes.scene.value] == undefined) loaded[mediaEls[i].attributes.scene.value] = []
-
                     mediaEl = fixUpMediaElement(mediaEls[i]);
 
                     if (!mediaEl.src && !mediaEl.srcObject) {
                         warn('Audio/video asset has neither `src` nor `srcObject` attributes.');
                     }
+                    // se a midia voltar como undefined o modo preloading esta ativado
                     if (mediaElementLoaded(mediaEl) != undefined) {
-                        loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
+                        //Caso nao exista cena ele vai crirar uma
+                        if (loaded[mediaEls[i].attributes.scene.value] == undefined) loaded[mediaEls[i].attributes.scene.value] = []
+
+                        //Checa se esse asstes ja foi baixado e se nao faz o download
+                        if (mediaEls[i].isChecked) {
+                            mediaEls[i].isChecked = true
+                            loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
+                        }
                     }
 
                 }
 
                 // Trigger loaded for scene to start rendering.
                 var loopLoaded = Object.keys(loaded)
-
+                console.log(this.loders)
                 for (i = 0; i < loopLoaded.length; i++) {
-                    Promise.all(loaded[loopLoaded[i]]).then(self.emit('sceneLoaded', loopLoaded[i]));
+                    console.log(loopLoaded)
+                    Promise.all(loaded[loopLoaded[i]]).then(emitter(self, loopLoaded[i]));
                 }
 
 
@@ -74402,6 +74420,30 @@ module.exports = registerElement('a-assets', {
             }
         },
 
+        getChildEntities: {
+            value: function () {
+                var children = this.children;
+                var childEntities = [];
+
+                for (var i = 0; i < children.length; i++) {
+                    var child = children[i];
+                    if (child instanceof AEntity) {
+                        childEntities.push(child);
+                    }
+                }
+                console.log(childEntities)
+                return childEntities;
+            }
+        },
+
+        add: {
+            value: function (el) {
+                this.appendChild(el)
+                this.attachedCallback()
+                this.emit('child-attached', { el: el });
+            }
+        },
+
         load: {
             value: function () {
                 ANode.prototype.load.call(this, null, function waitOnFilter(el) {
@@ -74411,6 +74453,11 @@ module.exports = registerElement('a-assets', {
         }
     })
 });
+
+function emitter(self, sceneAsLoad) {
+    self.loders.push(sceneAsLoad)
+    self.emit('sceneLoaded', sceneAsLoad)
+}
 
 /**
  * Preload using XHRLoader for any type of asset.
@@ -79972,7 +80019,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 1.0.0 (Date 2019-12-18, Commit #7a05b781)');
+console.log('A-Frame Version: 1.0.0 (Date 2019-12-19, Commit #b1239516)');
 console.log('three Version (https://github.com/supermedium/three.js):',
             pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);

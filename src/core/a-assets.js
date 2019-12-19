@@ -19,6 +19,7 @@ module.exports = registerElement('a-assets', {
                 this.isAssets = true;
                 this.fileLoader = fileLoader;
                 this.timeout = null;
+                this.loders = []
             }
         },
 
@@ -36,45 +37,59 @@ module.exports = registerElement('a-assets', {
                 if (!this.parentNode.isScene) {
                     throw new Error('<a-assets> must be a child of a <a-scene>.');
                 }
-
                 // Wait for <img>s.
                 imgEls = this.querySelectorAll('img');
                 for (i = 0; i < imgEls.length; i++) {
                     imgEl = fixUpMediaElement(imgEls[i]);
-                    if (loaded[imgEls[i].attributes.scene.value] == undefined) loaded[imgEls[i].attributes.scene.value] = []
+                    if (imgEls[i].attributes.scene.value == undefined) {
+                        throw new Error("Todos os assets tem que pssuir a cena.");
+                    }
 
-                    loaded[imgEls[i].attributes.scene.value].push(new Promise(function (resolve, reject) {
-                        // Set in cache because we won't be needing to call three.js loader if we have.
-                        // a loaded media element.
-                        THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
-                        imgEl.onload = resolve;
-                        imgEl.onerror = reject;
-                    }));
-                    //   console.log(Object.entries(loaded))
+                    //Checa se esse asstes ja foi baixado e se nao faz o download
+                    if (!imgEls[i].isChecked) {
+                        //Caso nao exista cena ele vai crirar uma
+                        if (loaded[imgEls[i].attributes.scene.value] == undefined) loaded[imgEls[i].attributes.scene.value] = []
+
+                        imgEls[i].isChecked = true
+                        loaded[imgEls[i].attributes.scene.value].push(new Promise(function (resolve, reject) {
+                            // Set in cache because we won't be needing to call three.js loader if we have.
+                            // a loaded media element.
+                            THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
+                            imgEl.onload = resolve;
+                            imgEl.onerror = reject;
+                        }));
+                    }
                 }
 
                 // Wait for <audio>s and <video>s.
                 mediaEls = this.querySelectorAll('audio, video');
                 for (i = 0; i < mediaEls.length; i++) {
 
-                    if (loaded[mediaEls[i].attributes.scene.value] == undefined) loaded[mediaEls[i].attributes.scene.value] = []
-
                     mediaEl = fixUpMediaElement(mediaEls[i]);
 
                     if (!mediaEl.src && !mediaEl.srcObject) {
                         warn('Audio/video asset has neither `src` nor `srcObject` attributes.');
                     }
+                    // se a midia voltar como undefined o modo preloading esta ativado
                     if (mediaElementLoaded(mediaEl) != undefined) {
-                        loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
+                        //Caso nao exista cena ele vai crirar uma
+                        if (loaded[mediaEls[i].attributes.scene.value] == undefined) loaded[mediaEls[i].attributes.scene.value] = []
+
+                        //Checa se esse asstes ja foi baixado e se nao faz o download
+                        if (mediaEls[i].isChecked) {
+                            mediaEls[i].isChecked = true
+                            loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
+                        }
                     }
 
                 }
 
                 // Trigger loaded for scene to start rendering.
                 var loopLoaded = Object.keys(loaded)
-
+                console.log(this.loders)
                 for (i = 0; i < loopLoaded.length; i++) {
-                    Promise.all(loaded[loopLoaded[i]]).then(self.emit('sceneLoaded', loopLoaded[i]));
+                    console.log(loopLoaded)
+                    Promise.all(loaded[loopLoaded[i]]).then(emitter(self, loopLoaded[i]));
                 }
 
 
@@ -95,6 +110,30 @@ module.exports = registerElement('a-assets', {
             }
         },
 
+        getChildEntities: {
+            value: function () {
+                var children = this.children;
+                var childEntities = [];
+
+                for (var i = 0; i < children.length; i++) {
+                    var child = children[i];
+                    if (child instanceof AEntity) {
+                        childEntities.push(child);
+                    }
+                }
+                console.log(childEntities)
+                return childEntities;
+            }
+        },
+
+        add: {
+            value: function (el) {
+                this.appendChild(el)
+                this.attachedCallback()
+                this.emit('child-attached', { el: el });
+            }
+        },
+
         load: {
             value: function () {
                 ANode.prototype.load.call(this, null, function waitOnFilter(el) {
@@ -104,6 +143,11 @@ module.exports = registerElement('a-assets', {
         }
     })
 });
+
+function emitter(self, sceneAsLoad) {
+    self.loders.push(sceneAsLoad)
+    self.emit('sceneLoaded', sceneAsLoad)
+}
 
 /**
  * Preload using XHRLoader for any type of asset.
