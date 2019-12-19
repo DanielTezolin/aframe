@@ -25,80 +25,10 @@ module.exports = registerElement('a-assets', {
 
         attachedCallback: {
             value: function () {
-                var self = this;
-                var i;
-                var loaded = {};
-                var mediaEl;
-                var mediaEls;
-                var imgEl;
-                var imgEls;
-                var timeout;
-
-                if (!this.parentNode.isScene) {
-                    throw new Error('<a-assets> must be a child of a <a-scene>.');
-                }
-                // Wait for <img>s.
-                imgEls = this.querySelectorAll('img');
-                for (i = 0; i < imgEls.length; i++) {
-                    imgEl = fixUpMediaElement(imgEls[i]);
-                    if (imgEls[i].attributes.scene.value == undefined) {
-                        throw new Error("Todos os assets tem que pssuir a cena.");
-                    }
-
-                    //Checa se esse asstes ja foi baixado e se nao faz o download
-                    if (!imgEls[i].isChecked) {
-                        //Caso nao exista cena ele vai crirar uma
-                        if (loaded[imgEls[i].attributes.scene.value] == undefined) loaded[imgEls[i].attributes.scene.value] = []
-
-                        imgEls[i].isChecked = true
-                        loaded[imgEls[i].attributes.scene.value].push(new Promise(function (resolve, reject) {
-                            // Set in cache because we won't be needing to call three.js loader if we have.
-                            // a loaded media element.
-                            THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
-                            imgEl.onload = resolve;
-                            imgEl.onerror = reject;
-                        }));
-                    }
-                }
-
-                // Wait for <audio>s and <video>s.
-                mediaEls = this.querySelectorAll('audio, video');
-                for (i = 0; i < mediaEls.length; i++) {
-
-                    mediaEl = fixUpMediaElement(mediaEls[i]);
-
-                    if (!mediaEl.src && !mediaEl.srcObject) {
-                        warn('Audio/video asset has neither `src` nor `srcObject` attributes.');
-                    }
-                    // se a midia voltar como undefined o modo preloading esta ativado
-                    if (mediaElementLoaded(mediaEl) != undefined) {
-                        //Caso nao exista cena ele vai crirar uma
-                        if (loaded[mediaEls[i].attributes.scene.value] == undefined) loaded[mediaEls[i].attributes.scene.value] = []
-
-                        //Checa se esse asstes ja foi baixado e se nao faz o download
-                        if (mediaEls[i].isChecked) {
-                            mediaEls[i].isChecked = true
-                            loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
-                        }
-                    }
-
-                }
-
-                // Trigger loaded for scene to start rendering.
-                var loopLoaded = Object.keys(loaded)
-                for (i = 0; i < loopLoaded.length; i++) {
-                    Promise.all(loaded[loopLoaded[i]]).then(e => emitter(self, e));
-                }
-
-
-                // Timeout to start loading anyways.
-                // timeout = parseInt(this.getAttribute('timeout'), 10) || 3000;
-                // this.timeout = setTimeout(function () {
-                //     if (self.hasLoaded) { return; }
-                //     warn('Asset loading timed out in ', timeout, 'ms');
-                //     self.emit('timeout');
-                //     //   self.load();
-                // }, timeout);
+              if (!this.parentNode.isScene) {
+                throw new Error('<a-assets> must be a child of a <a-scene>.');
+            }
+            loadderAssets.call(this)
             }
         },
 
@@ -124,11 +54,12 @@ module.exports = registerElement('a-assets', {
             }
         },
 
-        add: {
-            value: function (el) {
-                this.appendChild(el)
-                this.attachedCallback()
-                this.emit('child-attached', { el: el });
+        reload: {
+            value: function () {
+                // this.innerHTML += el
+                // console.log(el)
+                loadderAssets.call(this)
+                // this.emit('child-attached', { el: el });
             }
         },
 
@@ -142,10 +73,86 @@ module.exports = registerElement('a-assets', {
     })
 });
 
+function loadderAssets() {
+  var self = this;
+  var i;
+  var loaded = {};
+  var mediaEl;
+  var mediaEls;
+  var imgEl;
+  var imgEls;
+  var timeout;
+
+  // Wait for <img>s.
+  imgEls = this.querySelectorAll('img');
+  for (i = 0; i < imgEls.length; i++) {
+      imgEl = fixUpMediaElement(imgEls[i]);
+      if (imgEls[i].attributes.scene.value == undefined) {
+          throw new Error("Todos os assets tem que pssuir a cena.");
+      }
+
+      //Checa se esse asstes ja foi baixado e se nao faz o download
+      if (!imgEls[i].isChecked) {
+          //Caso nao exista cena ele vai crirar uma
+          if (loaded[imgEls[i].attributes.scene.value] == undefined) loaded[imgEls[i].attributes.scene.value] = []
+
+          imgEls[i].isChecked = true
+          loaded[imgEls[i].attributes.scene.value].push(new Promise(function (resolve, reject) {
+              // Set in cache because we won't be needing to call three.js loader if we have.
+              // a loaded media element.
+              THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
+              imgEl.onload = resolve;
+              imgEl.onerror = reject;
+          }));
+      }
+  }
+
+  // Wait for <audio>s and <video>s.
+  mediaEls = this.querySelectorAll('audio, video');
+  for (i = 0; i < mediaEls.length; i++) {
+
+      mediaEl = fixUpMediaElement(mediaEls[i]);
+
+      if (!mediaEl.src && !mediaEl.srcObject) {
+          warn('Audio/video asset has neither `src` nor `srcObject` attributes.');
+      }
+      // se a midia voltar como undefined o modo preloading esta ativado
+      if (mediaElementLoaded(mediaEl) != undefined) {
+          //Caso nao exista cena ele vai crirar uma
+          if (loaded[mediaEls[i].attributes.scene.value] == undefined) loaded[mediaEls[i].attributes.scene.value] = []
+
+          //Checa se esse asstes ja foi baixado e se nao faz o download
+          if (mediaEls[i].isChecked) {
+              mediaEls[i].isChecked = true
+              loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
+          }
+      }
+
+  }
+
+  // Trigger loaded for scene to start rendering.
+  var loopLoaded = Object.keys(loaded)
+
+  for (i = 0; i < loopLoaded.length; i++) {
+      Promise.all(loaded[loopLoaded[i]]).then(e => emitter(self, e));
+  }
+
+
+  // Timeout to start loading anyways.
+  // timeout = parseInt(this.getAttribute('timeout'), 10) || 3000;
+  // this.timeout = setTimeout(function () {
+  //     if (self.hasLoaded) { return; }
+  //     warn('Asset loading timed out in ', timeout, 'ms');
+  //     self.emit('timeout');
+  //     //   self.load();
+  // }, timeout);
+}
+
 function emitter(self, event) {
     self.loders.push(event[0].path[0].attributes.scene.value)
-    self.emit('sceneLoaded', { scene: event[0].path[0].attributes.scene.value, assets: event })
+    self.emit('sceneLoaded', {scene: event[0].path[0].attributes.scene.value, assets: event})
 }
+
 
 /**
  * Preload using XHRLoader for any type of asset.
