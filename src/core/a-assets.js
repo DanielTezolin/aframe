@@ -7,8 +7,6 @@ var THREE = require('../lib/three');
 var fileLoader = new THREE.FileLoader();
 var warn = debug('core:a-assets:warn');
 
-var GLTF_HEADER_MAGIC = 'glTF';
-
 /**
  * Asset management system. Handles blocking on asset loading.
  */
@@ -25,10 +23,10 @@ module.exports = registerElement('a-assets', {
 
         attachedCallback: {
             value: function () {
-              if (!this.parentNode.isScene) {
-                throw new Error('<a-assets> must be a child of a <a-scene>.');
-            }
-            loadderAssets.call(this)
+                if (!this.parentNode.isScene) {
+                    throw new Error('<a-assets> must be a child of a <a-scene>.');
+                }
+                loadderAssets.call(this)
             }
         },
 
@@ -74,83 +72,83 @@ module.exports = registerElement('a-assets', {
 });
 
 function loadderAssets() {
-  var self = this;
-  var i;
-  var loaded = {};
-  var mediaEl;
-  var mediaEls;
-  var imgEl;
-  var imgEls;
-  var timeout;
+    var self = this;
+    var i;
+    var loaded = {};
+    var mediaEl;
+    var mediaEls;
+    var imgEl;
+    var imgEls;
+    var timeout;
 
-  // Wait for <img>s.
-  imgEls = this.querySelectorAll('img');
-  for (i = 0; i < imgEls.length; i++) {
-      imgEl = fixUpMediaElement(imgEls[i]);
-      if (imgEls[i].attributes.scene.value == undefined) {
-          throw new Error("Todos os assets tem que pssuir a cena.");
-      }
+    // Wait for <img>s.
+    imgEls = this.querySelectorAll('img');
+    for (i = 0; i < imgEls.length; i++) {
+        imgEl = fixUpMediaElement(imgEls[i]);
+        if (imgEls[i].attributes.scene.value == undefined) {
+            throw new Error("Todos os assets tem que pssuir a cena.");
+        }
 
-      //Checa se esse asstes ja foi baixado e se nao faz o download
-      if (!imgEls[i].isChecked) {
-          //Caso nao exista cena ele vai crirar uma
-          if (loaded[imgEls[i].attributes.scene.value] == undefined) loaded[imgEls[i].attributes.scene.value] = []
+        //Checa se esse asstes ja foi baixado e se nao faz o download
+        if (!imgEls[i].isChecked) {
+            //Caso nao exista cena ele vai crirar uma
+            if (loaded[imgEls[i].attributes.scene.value] == undefined) loaded[imgEls[i].attributes.scene.value] = []
 
-          imgEls[i].isChecked = true
-          loaded[imgEls[i].attributes.scene.value].push(new Promise(function (resolve, reject) {
-              // Set in cache because we won't be needing to call three.js loader if we have.
-              // a loaded media element.
-              THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
-              imgEl.onload = resolve;
-              imgEl.onerror = reject;
-          }));
-      }
-  }
+            imgEls[i].isChecked = true
+            loaded[imgEls[i].attributes.scene.value].push(new Promise(function (resolve, reject) {
+                // Set in cache because we won't be needing to call three.js loader if we have.
+                // a loaded media element.
+                THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
+                imgEl.onload = resolve;
+                imgEl.onerror = reject;
+            }));
+        }
+    }
 
-  // Wait for <audio>s and <video>s.
-  mediaEls = this.querySelectorAll('audio, video');
-  for (i = 0; i < mediaEls.length; i++) {
+    // Wait for <audio>s and <video>s.
+    mediaEls = this.querySelectorAll('audio, video');
+    for (i = 0; i < mediaEls.length; i++) {
 
-      mediaEl = fixUpMediaElement(mediaEls[i]);
+        mediaEl = fixUpMediaElement(mediaEls[i]);
 
-      if (!mediaEl.src && !mediaEl.srcObject) {
-          warn('Audio/video asset has neither `src` nor `srcObject` attributes.');
-      }
-      // se a midia voltar como undefined o modo preloading esta ativado
-      if (mediaElementLoaded(mediaEl) != undefined) {
-          //Caso nao exista cena ele vai crirar uma
-          if (loaded[mediaEls[i].attributes.scene.value] == undefined) loaded[mediaEls[i].attributes.scene.value] = []
+        if (!mediaEl.src && !mediaEl.srcObject) {
+            warn('Audio/video asset has neither `src` nor `srcObject` attributes.');
+        }
+        // se a midia voltar como undefined o modo preloading esta ativado
+        if (mediaElementLoaded(mediaEl) != undefined) {
+            //Caso nao exista cena ele vai crirar uma
+            if (loaded[mediaEls[i].attributes.scene.value] == undefined) loaded[mediaEls[i].attributes.scene.value] = []
 
-          //Checa se esse asstes ja foi baixado e se nao faz o download
-          if (mediaEls[i].isChecked) {
-              mediaEls[i].isChecked = true
-              loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
-          }
-      }
+            //Checa se esse asstes ja foi baixado e se nao faz o download
+            if (mediaEls[i].isChecked) {
+                mediaEls[i].isChecked = true
+                loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
+            }
+        }
 
-  }
+    }
 
-  // Trigger loaded for scene to start rendering.
-  var loopLoaded = Object.keys(loaded)
+    // Trigger loaded for scene to start rendering.
+    var loopLoaded = Object.keys(loaded)
 
-  for (i = 0; i < loopLoaded.length; i++) {
-      Promise.all(loaded[loopLoaded[i]]).then(e => emitter(self, e));
-  }
+    for (i = 0; i < loopLoaded.length; i++) {
+        Promise.all(loaded[loopLoaded[i]]).then(e => emitter(self, e));
+    }
 
 
-  // Timeout to start loading anyways.
-  // timeout = parseInt(this.getAttribute('timeout'), 10) || 3000;
-  // this.timeout = setTimeout(function () {
-  //     if (self.hasLoaded) { return; }
-  //     warn('Asset loading timed out in ', timeout, 'ms');
-  //     self.emit('timeout');
-  //     //   self.load();
-  // }, timeout);
+    // Timeout to start loading anyways.
+    // timeout = parseInt(this.getAttribute('timeout'), 10) || 3000;
+    // this.timeout = setTimeout(function () {
+    //     if (self.hasLoaded) { return; }
+    //     warn('Asset loading timed out in ', timeout, 'ms');
+    //     self.emit('timeout');
+    //     //   self.load();
+    // }, timeout);
 }
 
 function emitter(self, event) {
     self.loders.push(event[0].path[0].attributes.scene.value)
-    self.emit('sceneLoaded', {scene: event[0].path[0].attributes.scene.value, assets: event})
+    self.emit('sceneLoaded', { scene: event[0].path[0].attributes.scene.value, assets: event })
 }
 
 
@@ -170,19 +168,10 @@ registerElement('a-asset-item', {
             value: function () {
                 var self = this;
                 var src = this.getAttribute('src');
-                var responseType = this.getAttribute('response-type');
-
-                fileLoader.setResponseType(responseType || 'text');
-
+                fileLoader.setResponseType(
+                    this.getAttribute('response-type') || inferResponseType(src));
                 fileLoader.load(src, function handleOnLoad(response) {
-                    // if the response type is not given, check for the GLTF header
-                    // and convert the response to an arraybuffer if it is present.
-                    if (!responseType && (response.indexOf(GLTF_HEADER_MAGIC) === 0)) {
-                        self.data = getArrayBuffer(response);
-                    } else {
-                        self.data = response;
-                    }
-
+                    self.data = response;
                     /*
                       Workaround for a Chrome bug. If another XHR is sent to the same url before the
                       previous one closes, the second request never finishes.
@@ -317,20 +306,37 @@ function extractDomain(url) {
 }
 
 /**
- * getArrayBuffer accepts a string and returns it as an array buffer.
- * @param {string} string
- * @returns {arraybuffer}
+ * Infer response-type attribute from src.
+ * Default is text (default XMLHttpRequest.responseType)
+ * and arraybuffer for .glb files.
+ *
+ * @param {string} src
+ * @returns {string}
  */
-function getArrayBuffer(string) {
-    // utf-16 has 2 bytes for each char
-    var buffer = new ArrayBuffer(string.length * 2);
-    var view = new Uint16Array(buffer);
-
-    for (var i = 0, len = string.length; i < len; i++) {
-        view[i] = string.charCodeAt(i);
+function inferResponseType(src) {
+    var fileName = getFileNameFromURL(src);
+    var dotLastIndex = fileName.lastIndexOf('.');
+    if (dotLastIndex >= 0) {
+        var extension = fileName.slice(dotLastIndex, src.search(/\?|#|$/));
+        if (extension === '.glb') {
+            return 'arraybuffer';
+        }
     }
-
-    return buffer;
+    return 'text';
 }
+module.exports.inferResponseType = inferResponseType;
 
-module.exports.getArrayBuffer = getArrayBuffer;
+/**
+ * Extract filename from URL
+ *
+ * @param {string} url
+ * @returns {string}
+ */
+function getFileNameFromURL(url) {
+    var parser = document.createElement('a');
+    parser.href = url;
+    var query = parser.search.replace(/^\?/, '');
+    var filePath = url.replace(query, '').replace('?', '');
+    return filePath.substring(filePath.lastIndexOf('/') + 1);
+}
+module.exports.getFileNameFromURL = getFileNameFromURL;
