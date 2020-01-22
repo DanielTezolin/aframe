@@ -89,9 +89,9 @@ function loadderAssets() {
             throw new Error("Todos os assets tem que pssuir a cena.");
         }
 
-        //Checa se esse asstes ja foi baixado e se nao faz o download
+        //Checa se esse assets ja foi baixado e se nao faz o download
         if (!imgEls[i].isChecked) {
-            //Caso nao exista cena ele vai crirar uma
+            //Caso nao exista uma cena ele vai criar uma
             if (loaded[imgEls[i].attributes.scene.value] == undefined) loaded[imgEls[i].attributes.scene.value] = []
 
             imgEls[i].isChecked = true
