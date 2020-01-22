@@ -77,7 +77,9 @@ module.exports.Component = registerComponent('sound', {
           sound.setBuffer(buffer);
         }
         self.loaded = true;
-
+        
+        document.querySelector('a-assets').emit('sound-loaded', self);
+        
         // Remove this key from cache, otherwise we can't play it again
         THREE.Cache.remove(data.src);
         if (self.data.autoplay || self.mustPlay) { self.playSound(); }
