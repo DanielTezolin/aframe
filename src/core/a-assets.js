@@ -140,13 +140,13 @@ function loadderAssets() {
 
 
     // Timeout to start loading anyways.
-    // timeout = parseInt(this.getAttribute('timeout'), 10) || 3000;
-    // this.timeout = setTimeout(function () {
-    //     if (self.hasLoaded) { return; }
-    //     warn('Asset loading timed out in ', timeout, 'ms');
-    //     self.emit('timeout');
-    //     //   self.load();
-    // }, timeout);
+    timeout = parseInt(this.getAttribute('timeout'), 10) || 3000;
+    this.timeout = setTimeout(function () {
+        if (self.hasLoaded) { return; }
+        warn('Asset loading timed out in ', timeout, 'ms');
+        self.emit('timeout');
+          self.load();
+    }, timeout);
 }
 
 function emitter(self, event) {
@@ -208,28 +208,50 @@ function mediaElementLoaded(el) {
     if (!el.hasAttribute('autoplay') && el.getAttribute('preload') !== 'auto') {
         return;
     }
-    
+  
     // If media specifies autoplay or preload, wait until media is completely buffered.
     return new Promise(function (resolve, reject) {
       
         if (el.readyState === 4) { return resolve({path:[el]}); }  // Already loaded.
         if (el.error) { return reject(); }  // Error.
 
-        el.addEventListener('canplaythrough', checkProgress, false);
-        // el.addEventListener('progress', checkProgress, false);
+        el.addEventListener('loadeddata', e => checkfinish(e), false);
+        
+        el.addEventListener('progress', e => checkProgress(e), false);
         el.addEventListener('error', reject, false);
 
-        
+        console.log({e:el})
 
-        function checkProgress() {
+        function checkfinish(e) {
+          var secondsBuffered = 0;
+            for (var i = 0; i < e.path[0].buffered.length; i++) {
+                secondsBuffered += e.path[0].buffered.end(i) - e.path[0].buffered.start(i);
+            }
+          
+          console.log(`${e.path[0].attributes.id.value} ${secondsBuffered} - ${e.path[0].duration}`)
+          if (secondsBuffered < e.path[0].duration) {
+            el.parentElement.addEventListener('sound-loaded', e => {
+
+              console.log(e.detail.attrValue.src)
+              if(e.detail.attrValue.src == `#${el.id}`) {
+                console.log(e)
+               resolve({path:[el]});
+              }
+            }, false);
+            
+          }
+        }
+
+        function checkProgress(e) {
             // Add up the seconds buffered.
             var secondsBuffered = 0;
             for (var i = 0; i < el.buffered.length; i++) {
                 secondsBuffered += el.buffered.end(i) - el.buffered.start(i);
             }
 
-            resolve({path:[el]});
+            // resolve({path:[el]});
             // Compare seconds buffered to media duration.
+
             if (secondsBuffered >= el.duration) {
                 // Set in cache because we won't be needing to call three.js loader if we have.
                 // a loaded media element.
@@ -239,7 +261,7 @@ function mediaElementLoaded(el) {
                     THREE.Cache.files[el.getAttribute('src')] = el;
                 }
                 
-                resolve({path:[el]});
+                resolve(e);
             }
         }
     });
