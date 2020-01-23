@@ -119,15 +119,15 @@ function loadderAssets() {
         } else {
 
 
-          //Checa se esse asstes ja foi baixado e se nao faz o download
-          if (!mediaEls[i].isChecked) {
-            //Caso nao exista cena ele vai crirar uma
-           if (loaded[mediaEls[i].attributes.scene.value] == undefined) {
-            loaded[mediaEls[i].attributes.scene.value] = []
-          }
-              mediaEls[i].isChecked = true
-              loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
-          }
+            //Checa se esse asstes ja foi baixado e se nao faz o download
+            if (!mediaEls[i].isChecked) {
+                //Caso nao exista cena ele vai crirar uma
+                if (loaded[mediaEls[i].attributes.scene.value] == undefined) {
+                    loaded[mediaEls[i].attributes.scene.value] = []
+                }
+                mediaEls[i].isChecked = true
+                loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
+            }
         }
     }
 
@@ -145,7 +145,7 @@ function loadderAssets() {
         if (self.hasLoaded) { return; }
         warn('Asset loading timed out in ', timeout, 'ms');
         self.emit('timeout');
-          self.load();
+        self.load();
     }, timeout);
 }
 
@@ -208,38 +208,40 @@ function mediaElementLoaded(el) {
     if (!el.hasAttribute('autoplay') && el.getAttribute('preload') !== 'auto') {
         return;
     }
-  
+
     // If media specifies autoplay or preload, wait until media is completely buffered.
     return new Promise(function (resolve, reject) {
-      
-        if (el.readyState === 4) { return resolve({path:[el]}); }  // Already loaded.
+
+        if (el.readyState === 4) { return resolve({ path: [el] }); }  // Already loaded.
         if (el.error) { return reject(); }  // Error.
 
         el.addEventListener('loadeddata', e => checkfinish(e), false);
-        
+
         el.addEventListener('progress', e => checkProgress(e), false);
         el.addEventListener('error', reject, false);
 
-        console.log({e:el})
+        // console.log({e:el})
 
         function checkfinish(e) {
-          var secondsBuffered = 0;
+            var secondsBuffered = 0;
             for (var i = 0; i < e.path[0].buffered.length; i++) {
                 secondsBuffered += e.path[0].buffered.end(i) - e.path[0].buffered.start(i);
             }
-          
-          console.log(`${e.path[0].attributes.id.value} ${secondsBuffered} - ${e.path[0].duration}`)
-          if (secondsBuffered < e.path[0].duration) {
-            el.parentElement.addEventListener('sound-loaded', e => {
 
-              console.log(e.detail.attrValue.src)
-              if(e.detail.attrValue.src == `#${el.id}`) {
-                console.log(e)
-               resolve({path:[el]});
-              }
-            }, false);
-            
-          }
+            //   console.log(`${e.path[0].attributes.id.value} ${secondsBuffered} - ${e.path[0].duration}`)
+            if (secondsBuffered < e.path[0].duration) {
+                el.parentElement.addEventListener('sound-loaded', e => {
+
+                    //   console.log(e.detail.attrValue.src)
+                    if (e.detail.attrValue.src == `#${el.id}`) {
+                        // console.log(e)
+                        resolve({ path: [el] });
+                    }
+                }, false);
+
+            } else {
+                resolve({ path: [el] });
+            }
         }
 
         function checkProgress(e) {
@@ -260,7 +262,7 @@ function mediaElementLoaded(el) {
                 if (el.tagName === 'VIDEO') {
                     THREE.Cache.files[el.getAttribute('src')] = el;
                 }
-                
+
                 resolve(e);
             }
         }
