@@ -72191,7 +72191,9 @@ module.exports.Component = registerComponent('sound', {
           sound.setBuffer(buffer);
         }
         self.loaded = true;
-
+        
+        document.querySelector('a-assets').emit('sound-loaded', self);
+        
         // Remove this key from cache, otherwise we can't play it again
         THREE.Cache.remove(data.src);
         if (self.data.autoplay || self.mustPlay) { self.playSound(); }
@@ -74680,7 +74682,7 @@ module.exports = registerElement('a-assets', {
                 if (!this.parentNode.isScene) {
                     throw new Error('<a-assets> must be a child of a <a-scene>.');
                 }
-                loadderAssets.call(this)
+                // loadderAssets.call(this)
             }
         },
 
@@ -74768,18 +74770,21 @@ function loadderAssets() {
         if (!mediaEl.src && !mediaEl.srcObject) {
             warn('Audio/video asset has neither `src` nor `srcObject` attributes.');
         }
-        // se a midia voltar como undefined o modo preloading esta ativado
-        if (mediaElementLoaded(mediaEl) != undefined) {
+        // se a midia voltar como undefined o modo preloading nao esta ativado
+        if (!mediaEl.hasAttribute('autoplay') && mediaEl.getAttribute('preload') !== 'auto') {
+        } else {
+
+
+          //Checa se esse asstes ja foi baixado e se nao faz o download
+          if (!mediaEls[i].isChecked) {
             //Caso nao exista cena ele vai crirar uma
-            if (loaded[mediaEls[i].attributes.scene.value] == undefined) loaded[mediaEls[i].attributes.scene.value] = []
-
-            //Checa se esse asstes ja foi baixado e se nao faz o download
-            if (mediaEls[i].isChecked) {
-                mediaEls[i].isChecked = true
-                loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
-            }
+           if (loaded[mediaEls[i].attributes.scene.value] == undefined) {
+            loaded[mediaEls[i].attributes.scene.value] = []
+          }
+              mediaEls[i].isChecked = true
+              loaded[mediaEls[i].attributes.scene.value].push(mediaElementLoaded(mediaEl));
+          }
         }
-
     }
 
     // Trigger loaded for scene to start rendering.
@@ -74791,13 +74796,13 @@ function loadderAssets() {
 
 
     // Timeout to start loading anyways.
-    // timeout = parseInt(this.getAttribute('timeout'), 10) || 3000;
-    // this.timeout = setTimeout(function () {
-    //     if (self.hasLoaded) { return; }
-    //     warn('Asset loading timed out in ', timeout, 'ms');
-    //     self.emit('timeout');
-    //     //   self.load();
-    // }, timeout);
+    timeout = parseInt(this.getAttribute('timeout'), 10) || 3000;
+    this.timeout = setTimeout(function () {
+        if (self.hasLoaded) { return; }
+        warn('Asset loading timed out in ', timeout, 'ms');
+        self.emit('timeout');
+          self.load();
+    }, timeout);
 }
 
 function emitter(self, event) {
@@ -74859,24 +74864,50 @@ function mediaElementLoaded(el) {
     if (!el.hasAttribute('autoplay') && el.getAttribute('preload') !== 'auto') {
         return;
     }
-
+  
     // If media specifies autoplay or preload, wait until media is completely buffered.
     return new Promise(function (resolve, reject) {
-        if (el.readyState === 4) { return resolve(); }  // Already loaded.
+      
+        if (el.readyState === 4) { return resolve({path:[el]}); }  // Already loaded.
         if (el.error) { return reject(); }  // Error.
 
-        el.addEventListener('loadeddata', checkProgress, false);
-        el.addEventListener('progress', checkProgress, false);
+        el.addEventListener('loadeddata', e => checkfinish(e), false);
+        
+        el.addEventListener('progress', e => checkProgress(e), false);
         el.addEventListener('error', reject, false);
 
-        function checkProgress() {
+        console.log({e:el})
+
+        function checkfinish(e) {
+          var secondsBuffered = 0;
+            for (var i = 0; i < e.path[0].buffered.length; i++) {
+                secondsBuffered += e.path[0].buffered.end(i) - e.path[0].buffered.start(i);
+            }
+          
+          console.log(`${e.path[0].attributes.id.value} ${secondsBuffered} - ${e.path[0].duration}`)
+          if (secondsBuffered < e.path[0].duration) {
+            el.parentElement.addEventListener('sound-loaded', e => {
+
+              console.log(e.detail.attrValue.src)
+              if(e.detail.attrValue.src == `#${el.id}`) {
+                console.log(e)
+               resolve({path:[el]});
+              }
+            }, false);
+            
+          }
+        }
+
+        function checkProgress(e) {
             // Add up the seconds buffered.
             var secondsBuffered = 0;
             for (var i = 0; i < el.buffered.length; i++) {
                 secondsBuffered += el.buffered.end(i) - el.buffered.start(i);
             }
 
+            // resolve({path:[el]});
             // Compare seconds buffered to media duration.
+
             if (secondsBuffered >= el.duration) {
                 // Set in cache because we won't be needing to call three.js loader if we have.
                 // a loaded media element.
@@ -74885,7 +74916,8 @@ function mediaElementLoaded(el) {
                 if (el.tagName === 'VIDEO') {
                     THREE.Cache.files[el.getAttribute('src')] = el;
                 }
-                resolve();
+                
+                resolve(e);
             }
         }
     });
@@ -80370,7 +80402,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 1.0.3 (Date 2020-01-20, Commit #6f38286e)');
+console.log('A-Frame Version: 1.0.3 (Date 2020-01-23, Commit #b50f862b)');
 console.log('three Version (https://github.com/supermedium/three.js):',
     pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
