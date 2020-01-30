@@ -98,9 +98,15 @@ function loadderAssets() {
             loaded[imgEls[i].attributes.scene.value].push(new Promise(function (resolve, reject) {
                 // Set in cache because we won't be needing to call three.js loader if we have.
                 // a loaded media element.
-                THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
-                imgEl.onload = resolve;
-                imgEl.onerror = reject;
+                
+               THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
+
+                if(imgEl.complete == true) {
+                  resolve({ path: [imgEl] })
+                } else {
+                  imgEl.onload = resolve;
+                  imgEl.onerror = reject;
+                }
             }));
         }
     }
