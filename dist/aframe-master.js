@@ -74754,9 +74754,15 @@ function loadderAssets() {
             loaded[imgEls[i].attributes.scene.value].push(new Promise(function (resolve, reject) {
                 // Set in cache because we won't be needing to call three.js loader if we have.
                 // a loaded media element.
-                THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
-                imgEl.onload = resolve;
-                imgEl.onerror = reject;
+                
+               THREE.Cache.files[imgEls[i].getAttribute('src')] = imgEl;
+
+                if(imgEl.complete == true) {
+                  resolve({ path: [imgEl] })
+                } else {
+                  imgEl.onload = resolve;
+                  imgEl.onerror = reject;
+                }
             }));
         }
     }
@@ -80404,7 +80410,7 @@ _dereq_('./core/a-mixin');
 _dereq_('./extras/components/');
 _dereq_('./extras/primitives/');
 
-console.log('A-Frame Version: 1.0.3 (Date 2020-01-23, Commit #a601052f)');
+console.log('A-Frame Version: 1.0.3 (Date 2020-01-31, Commit #b3f48b66)');
 console.log('three Version (https://github.com/supermedium/three.js):',
     pkg.dependencies['super-three']);
 console.log('WebVR Polyfill Version:', pkg.dependencies['webvr-polyfill']);
